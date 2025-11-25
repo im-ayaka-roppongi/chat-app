@@ -23,6 +23,15 @@ public interface UserRepository {
   @Select("SELECT * FROM users WHERE id = #{id}")
   UserEntity findById(Integer id);
 
+  // ユーザー情報更新
   @Update("UPDATE users SET name = #{name}, email = #{email} WHERE id = #{id}")
   void update(UserEntity user);
+
+  // メールアドレスが一意かチェック
+  @Select("SELECT EXISTS(SELECT 1 FROM users WHERE email = #{email})")
+  boolean existsByEmail(String email);
+
+  // 更新時用:指定のIDのユーザー以外でEmailが使用されていないか確認するメソッド
+  @Select("SELECT COUNT(*) > 0 FROM users WHERE email = #{email} AND id != #{userId}")
+  boolean existsByEmailExcludingCurrent(String email, Integer userId);
 }
