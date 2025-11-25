@@ -3,6 +3,9 @@ package in.tech_camp.chat_app.repository;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
+
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Update;
 
@@ -34,4 +37,8 @@ public interface UserRepository {
   // 更新時用:指定のIDのユーザー以外でEmailが使用されていないか確認するメソッド
   @Select("SELECT COUNT(*) > 0 FROM users WHERE email = #{email} AND id != #{userId}")
   boolean existsByEmailExcludingCurrent(String email, Integer userId);
+
+  // ルーム作成時にユーザーをプルダウンで表示するためのメソッド
+  @Select("SELECT * FROM users WHERE id <> #{exludedId}")
+  List<UserEntity> findAllExcept(Integer excludedId);
 }
