@@ -34,6 +34,27 @@ public class RoomController {
 
   private final RoomUserRepository roomUserRepository;
   
+  @GetMapping("/")
+  public String index(@AuthenticationPrincipal CustomUserDetail currentUser, Model model) {
+    // currentUserのidでユーザー情報を取得する
+    UserEntity user = userRepository.findById(currentUser.getId());
+    // ビューで使用できるようにuserオブジェクトをモデルに追加する
+    model.addAttribute("user", user);
+    // ログインユーザーが登録されている中間テーブル一覧を取得する
+    List<RoomUserEntity> roomUserEntities = roomUserRepository.findByUserId(currentUser.getId());
+    // roomEntityのルームリストを取得してビューに与える。ストリームに変換して新しくroom情報だけのリストを作る
+    List<RoomEntity> roomList = roomUserEntities.stream()
+    // 中間テーブルのエンティティからroomEntityを取得し、
+        .map(RoomUserEntity::getRoom)
+        // 各roomEntityをまとめて新しいリストにまとめる
+        .collect(Collectors.toList());
+
+    // ビューでそのroomListを使えるようにroomsの名前で渡す
+    model.addAttribute("rooms", roomList);
+
+    return "rooms/index";
+  }
+
   @GetMapping("/rooms/new")
   public String showRoomNew(@AuthenticationPrincipal CustomUserDetail currentUser, Model model) {
     List<UserEntity> users = userRepository.findAllExcept(currentUser.getId());

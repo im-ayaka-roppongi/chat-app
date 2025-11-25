@@ -14,7 +14,7 @@ public interface RoomRepository {
   @Options(useGeneratedKeys = true, keyProperty = "id")
   void insert(RoomEntity roomEntity);
 
-  // idでroomを検索する
+  // room_idでroomを検索し、RoomEntityを取得するメソッド
   @Select("SELECT * FROM rooms WHERE id = #{id}")
   RoomEntity findById(Integer id);
 }
