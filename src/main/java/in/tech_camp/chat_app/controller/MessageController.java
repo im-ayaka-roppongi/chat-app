@@ -6,15 +6,29 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import in.tech_camp.chat_app.custom_user.CustomUserDetail;
+import in.tech_camp.chat_app.entity.MessageEntity;
 import in.tech_camp.chat_app.entity.RoomEntity;
 import in.tech_camp.chat_app.entity.RoomUserEntity;
 import in.tech_camp.chat_app.entity.UserEntity;
+import in.tech_camp.chat_app.form.MessageForm;
+import in.tech_camp.chat_app.form.RoomForm;
+import in.tech_camp.chat_app.form.UserForm;
 import in.tech_camp.chat_app.repository.UserRepository;
+import in.tech_camp.chat_app.validation.ValidationOrder;
+import in.tech_camp.chat_app.repository.MessageRepository;
+import in.tech_camp.chat_app.repository.RoomRepository;
 import in.tech_camp.chat_app.repository.RoomUserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.PostMapping;
+
+
 
 @Controller
 @AllArgsConstructor
@@ -23,23 +37,53 @@ public class MessageController {
 
   private final RoomUserRepository roomUserRepository;
 
-  @GetMapping("/message")
-  public String showMessages(@AuthenticationPrincipal CustomUserDetail currentUser, Model model){
-    // currentUserのidでユーザー情報を取得する
-    UserEntity user = userRepository.findById(currentUser.getId());
-    // ビューで使用できるようにuserオブジェクトをモデルに追加する
-    model.addAttribute("user", user);
-    // ログインユーザーが登録されている中間テーブル一覧を取得する
-    List<RoomUserEntity> roomUserEntities = roomUserRepository.findByUserId(currentUser.getId());
-    // roomEntityのルームリストを取得してビューに与える。ストリームに変換して新しくroom情報だけのリストを作る
-    List<RoomEntity> roomList = roomUserEntities.stream()
-    // 中間テーブルのエンティティからroomEntityを取得し、
-        .map(RoomUserEntity::getRoom)
-        // 各roomEntityをまとめて新しいリストにまとめる
-        .collect(Collectors.toList());
+  private final RoomRepository roomRepository;
 
-    // ビューでそのroomListを使えるようにroomsの名前で渡す
+  private final MessageRepository messageRepository;
+
+  // 投稿一覧と投稿フォーム画面表示
+  @GetMapping("/rooms/{roomId}/messages")
+  public String showMessages(@PathVariable("roomId") Integer roomId,@AuthenticationPrincipal CustomUserDetail currentUser, Model model){
+    UserEntity user = userRepository.findById(currentUser.getId());
+    model.addAttribute("user", user);
+    List<RoomUserEntity> roomUserEntities = roomUserRepository.findByUserId(currentUser.getId());
+    List<RoomEntity> roomList = roomUserEntities.stream()
+        .map(RoomUserEntity::getRoom)
+        .collect(Collectors.toList());
     model.addAttribute("rooms", roomList);
+
+    model.addAttribute("messageForm", new MessageForm());
+
+    RoomEntity room = roomRepository.findById(roomId);
+    model.addAttribute("room", room);
+
+    // 投稿一覧
+    List<MessageEntity> messages = messageRepository.findByRoomId(roomId);
+    model.addAttribute("messages", messages);
+
     return "messages/index";
+  }
+
+  // 投稿の保存処理
+  @PostMapping("/rooms/{roomId}/messages")
+  public String saveMessage(@PathVariable("roomId") Integer roomId, @ModelAttribute("messageForm") @Validated(ValidationOrder.class) MessageForm messageForm, BindingResult bindingResult, @AuthenticationPrincipal CustomUserDetail currentUser) {
+    if (bindingResult.hasErrors()) {
+      return "redirect:/rooms/" + roomId + "/messages";
+    }
+
+    MessageEntity message = new MessageEntity();
+    message.setContent(messageForm.getContent());
+
+    UserEntity user = userRepository.findById(currentUser.getId());
+    RoomEntity room = roomRepository.findById(roomId);
+    message.setUser(user);
+    message.setRoom(room);
+
+    try {
+      messageRepository.insert(message);
+    } catch (Exception e) {
+      System.out.println("エラー：" + e);
+    }
+    return "redirect:/rooms/" + roomId + "/messages";
   }
 }
