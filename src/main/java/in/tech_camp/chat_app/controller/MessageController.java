@@ -26,6 +26,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 
 
+
 @Controller
 @AllArgsConstructor
 public class MessageController {
@@ -37,7 +38,7 @@ public class MessageController {
 
   private final MessageRepository messageRepository;
 
-  // 投稿画面表示
+  // 投稿一覧と投稿フォーム画面表示
   @GetMapping("/rooms/{roomId}/messages")
   public String showMessages(@PathVariable("roomId") Integer roomId,@AuthenticationPrincipal CustomUserDetail currentUser, Model model){
     UserEntity user = userRepository.findById(currentUser.getId());
@@ -50,6 +51,10 @@ public class MessageController {
 
     model.addAttribute("messageForm", new MessageForm());
     model.addAttribute("roomId", roomId);
+
+    // 投稿一覧
+    List<MessageEntity> messages = messageRepository.findByRoomId(roomId);
+    model.addAttribute("messages", messages);
 
     return "messages/index";
   }
