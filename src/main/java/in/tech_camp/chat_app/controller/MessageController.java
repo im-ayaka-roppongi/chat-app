@@ -70,7 +70,7 @@ public class MessageController {
     if (bindingResult.hasErrors()) {
       return "redirect:/rooms/" + roomId + "/messages";
     }
-    
+
     MessageEntity message = new MessageEntity();
     message.setContent(messageForm.getContent());
 
