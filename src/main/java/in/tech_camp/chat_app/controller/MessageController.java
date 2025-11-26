@@ -76,7 +76,9 @@ public class MessageController {
 
   // 投稿の保存処理
   @PostMapping("/rooms/{roomId}/messages")
-  public String saveMessage(@PathVariable("roomId") Integer roomId, @ModelAttribute("messageForm") @Validated(ValidationOrder.class) MessageForm messageForm, BindingResult bindingResult, @AuthenticationPrincipal CustomUserDetail currentUser) {
+  public String saveMessage(@PathVariable("roomId") Integer roomId, @ModelAttribute("messageForm") MessageForm messageForm, BindingResult bindingResult, @AuthenticationPrincipal CustomUserDetail currentUser) {
+    // contentと画像の両方がnullまたは空の時はバリデーションではじく
+    messageForm.validateMessage(bindingResult);
     if (bindingResult.hasErrors()) {
       return "redirect:/rooms/" + roomId + "/messages";
     }
