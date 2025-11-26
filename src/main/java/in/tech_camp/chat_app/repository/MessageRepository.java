@@ -16,7 +16,7 @@ import in.tech_camp.chat_app.entity.MessageEntity;
 public interface MessageRepository {
   
   // メッセージ投稿保存処理
-  @Insert("INSERT INTO messages(content, user_id, room_id) VALUES(#{content}, #{user.id}, #{room.id}) ")
+  @Insert("INSERT INTO messages(content, image, user_id, room_id) VALUES(#{content}, #{image}, #{user.id}, #{room.id}) ")
   @Options(useGeneratedKeys = true, keyProperty = "id")
   void insert(MessageEntity messageEntity);
 
