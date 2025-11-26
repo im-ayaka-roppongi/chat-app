@@ -50,7 +50,9 @@ public class MessageController {
     model.addAttribute("rooms", roomList);
 
     model.addAttribute("messageForm", new MessageForm());
-    model.addAttribute("roomId", roomId);
+
+    RoomEntity room = roomRepository.findById(roomId);
+    model.addAttribute("room", room);
 
     // 投稿一覧
     List<MessageEntity> messages = messageRepository.findByRoomId(roomId);
